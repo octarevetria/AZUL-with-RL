@@ -1,9 +1,9 @@
 import numpy as np
-from blokus_env.constants import BOARD_SIZE, PIECES, NUM_PLAYERS, INITIAL_POSITIONS
+from constants import NUM_PLAYERS, PIECES
 
 class GameLogic:
     """
-    Class containing the core game logic for the Blokus environment.
+    Class containing the core game logic for the Azul board game environment.
     """
     def __init__(self):
         """
@@ -11,7 +11,7 @@ class GameLogic:
         """
         pass
 
-    def place_piece(self, board, pieces, player, piece_index, x, y, rotation, horizontal_flip=0, vertical_flip=0):
+    def place_piece(self, board, pieces, player, piece_index, x, y, rotation, horizontal_flip=0, vertical_flip=0): #Se queda
         """
         Place a piece on the board if the move is valid.
 
@@ -38,75 +38,7 @@ class GameLogic:
             return True
         return False
 
-    def get_piece_shape(self, piece_index, rotation, horizontal_flip, vertical_flip):
-        """
-        Get the shape of the piece after applying rotation and flips.
-
-        Parameters:
-        - piece_index (int): Index of the piece.
-        - rotation (int): Rotation of the piece (0, 1, 2, 3).
-        - horizontal_flip (int): Whether the piece is horizontally flipped (0 or 1).
-        - vertical_flip (int): Whether the piece is vertically flipped (0 or 1).
-
-        Returns:
-        - list: List of coordinates representing the shape of the piece.
-        """
-        piece_name = list(PIECES.keys())[piece_index]
-        piece_shape = PIECES[piece_name]
-        piece_shape = self.rotate_piece(piece_shape, rotation)
-
-        if horizontal_flip:
-            piece_shape = self.flip_horizontally(piece_shape)
-        if vertical_flip:
-            piece_shape = self.flip_vertically(piece_shape)
-
-        return piece_shape
-
-    def rotate_piece(self, piece, rotation):
-        """
-        Rotate the piece.
-
-        Parameters:
-        - piece (list): List of coordinates representing the piece.
-        - rotation (int): Rotation of the piece (0, 1, 2, 3).
-
-        Returns:
-        - list: Rotated piece.
-        """
-        if rotation == 0:
-            return piece
-        elif rotation == 1:
-            return [(y, -x) for x, y in piece]
-        elif rotation == 2:
-            return [(-x, -y) for x, y in piece]
-        elif rotation == 3:
-            return [(-y, x) for x, y in piece]
-
-    def flip_horizontally(self, piece):
-        """
-        Flip the piece horizontally.
-
-        Parameters:
-        - piece (list): List of coordinates representing the piece.
-
-        Returns:
-        - list: Horizontally flipped piece.
-        """
-        return [(-x, y) for x, y in piece]
-
-    def flip_vertically(self, piece):
-        """
-        Flip the piece vertically.
-
-        Parameters:
-        - piece (list): List of coordinates representing the piece.
-
-        Returns:
-        - list: Vertically flipped piece.
-        """
-        return [(x, -y) for x, y in piece]
-
-    def is_first_move(self, player, board):
+    def is_first_move(self, player, board): # Algo similar a is_first_move
         """
         Check if it is the first move for the player.
 
@@ -120,7 +52,7 @@ class GameLogic:
         initial_position = INITIAL_POSITIONS[player - 1]
         return board[initial_position] == 0
 
-    def is_valid_move(self, board, pieces, player, piece_shape, x, y):
+    def is_valid_move(self, board, pieces, player, piece_shape, x, y): #Chequear si esta disponible el color donde se quiere colocar
         """
         Check if the move is valid.
 
@@ -158,7 +90,7 @@ class GameLogic:
 
         return True
 
-    def get_valid_actions(self, board, pieces, player):
+    def get_valid_actions(self, board, pieces, player): # Necesita ser implementada
         """
         Get 1 valid action for the current player.
 
@@ -211,7 +143,7 @@ class GameLogic:
                                         invalid_action_masks[piece_index, x, y, rotation, horizontal_flip, vertical_flip] = 1
         return invalid_action_masks
 
-    def is_game_over(self, board, pieces):
+    def is_game_over(self, board, pieces): # Facil pero necesaria implementacion
         """
         Check if the game is over (no valid moves left for any player).
 
@@ -239,31 +171,7 @@ class GameLogic:
                                             return False
         return True
 
-    def touches_corner(self, board, player, piece_shape, x, y):
-        """
-        Check if the piece touches another piece of the same player by the corner.
-
-        Parameters:
-        - board (np.ndarray): The current board state.
-        - player (int): The current player (1-indexed).
-        - piece_shape (list): List of coordinates representing the shape of the piece.
-        - x (int): X coordinate for the placement.
-        - y (int): Y coordinate for the placement.
-
-        Returns:
-        - bool: True if the piece touches another piece of the same player by the corner, False otherwise.
-        """
-        adjacent_corners = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        for dx, dy in piece_shape:
-            px, py = x + dx, y + dy
-            for ax, ay in adjacent_corners:
-                cx, cy = px + ax, py + ay
-                if 0 <= cx < BOARD_SIZE and 0 <= cy < BOARD_SIZE:
-                    if board[cx, cy] == player:
-                        return True
-        return False
-
-    def touches_side(self, board, player, piece_shape, x, y):
+    def touches_side(self, board, player, piece_shape, x, y): # Mas para scoring
         """
         Check if the piece touches another piece of the same player by the side.
 
