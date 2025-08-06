@@ -9,12 +9,13 @@ class AzulEnv(gym.Env):
         self.action_space = gym.spaces.Tuple((
             gym.spaces.Discrete(6),  # De que lugar draftea (factories o pozo)
             gym.spaces.Discrete(5),  # Selección de color de piezas
+            gym.spaces.Discrete(16),  # Cantidad de fichas robadas
             gym.spaces.Discrete(2),  # Selecciona ficha de ir primero
             gym.spaces.Discrete(6)  # En que nivel las coloca
         ))
 
         self.observation_space = gym.spaces.Dict({
-            'draft_board': gym.spaces.Box(low=0, high=16, shape=(NUM_PLAYERS + 2, len(PIECES)), dtype=np.int8),  # Factories y pozo
+            'draft_board': gym.spaces.Box(low=0, high=16, shape=(NUM_PLAYERS * 2 + 2, len(PIECES)), dtype=np.int8),  # Factories y pozo
             'players_board': gym.spaces.Box(low=0, high=7, shape=(NUM_PLAYERS * 6, len(PIECES)), dtype=np.int8),  # Información del jugador
             'scoring_board': gym.spaces.Box(low=0, high=5, shape=(NUM_PLAYERS * 5, 5), dtype=np.int8),  # Información del puntaje
             'current_player': gym.spaces.Discrete(NUM_PLAYERS),  # Jugador actual
@@ -61,8 +62,8 @@ class AzulEnv(gym.Env):
         if action not in all_valid_actions:
             raise ValueError("Invalid action")
         else:
-            factory, color, go_first, ladder_lvl = action
-            count = self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, factory, color, go_first, ladder_lvl)
+            factory, color, count, go_first, ladder_lvl = action
+            self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, factory, color, go_first, ladder_lvl)
             self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
         return self.state, reward, done, {}
 
