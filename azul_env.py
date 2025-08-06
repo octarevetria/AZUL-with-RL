@@ -19,6 +19,7 @@ class AzulEnv(gym.Env):
             'players_board': gym.spaces.Box(low=0, high=7, shape=(NUM_PLAYERS * 6, len(PIECES)), dtype=np.int8),  # Información del jugador
             'scoring_board': gym.spaces.Box(low=0, high=5, shape=(NUM_PLAYERS * 5, 5), dtype=np.int8),  # Información del puntaje
             'current_player': gym.spaces.Discrete(NUM_PLAYERS),  # Jugador actual
+            'points_total': gym.spaces.Box(low=0, high=140, shape=(NUM_PLAYERS,), dtype=np.int8),  # Puntuación total de cada jugador
             'turn': gym.spaces.Discrete(10),  # Turno actual
             'game_over': gym.spaces.Discrete(2)  # Estado del juego (en curso o terminado)
         })
@@ -58,14 +59,33 @@ class AzulEnv(gym.Env):
         - done (bool): Whether the episode has ended.
         - info (dict): Additional info.
         """
-        all_valid_actions = self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.current_player)
-        if action not in all_valid_actions:
-            raise ValueError("Invalid action")
+        terminated, truncated = False, False
+        if not self.game_logic.no_tiles_remaining(self.draft_board):  
+            all_valid_actions = self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.current_player, self.scoring_board)
+            if action not in all_valid_actions:
+                raise ValueError("Invalid action")
+                truncated = True
+            else:
+                factory, color, count, go_first, ladder_lvl = action
+                self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, factory, color, go_first, ladder_lvl)
+                self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
         else:
-            factory, color, count, go_first, ladder_lvl = action
-            self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, factory, color, go_first, ladder_lvl)
-            self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
-        return self.state, reward, done, {}
+            self.turn += 1
+            self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
+            if self.game_logic.is_game_over(self.scoring_board):
+                terminated = True
+                reward = self.game_logic.calculate_rewards(self.scoring_board, self.points_total) #duda, de como distribuir las recompensas
+            else:
+                self.game_logic.update_first_player(self.players_board, self.current_player)
+                self.game_logic.player_tiles_clear(self.players_board)
+                self.game_logic.reset_draft_board(self.draft_board)
+                reward = self.game_logic.calculate_rewards(self.scoring_board, self.points_total) #Calcular esto bien, no me queda claro
+                done = False
+
+        observation = self.get_observation()
+
+
+        return observation, reward, terminated, truncated, {}
 
     def render(self, mode='human'):
         # Visualizar el entorno (opcional)
