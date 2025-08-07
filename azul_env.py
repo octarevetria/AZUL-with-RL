@@ -21,7 +21,6 @@ class AzulEnv(gym.Env):
             'current_player': gym.spaces.Discrete(NUM_PLAYERS),  # Jugador actual
             'points_total': gym.spaces.Box(low=0, high=140, shape=(NUM_PLAYERS,), dtype=np.int8),  # Puntuación total de cada jugador
             'turn': gym.spaces.Discrete(10),  # Turno actual
-            'game_over': gym.spaces.Discrete(2)  # Estado del juego (en curso o terminado)
         })
 
         self.reset()
@@ -38,7 +37,7 @@ class AzulEnv(gym.Env):
         - observation (dict): Initial observation of the environment.
         - info (dict): Additional info.
         """
-        self.draft_board = np.zeros((NUM_PLAYERS + 2, len(PIECES)), dtype=np.int8)
+        self.draft_board = np.zeros((NUM_PLAYERS * 2 + 2, len(PIECES)), dtype=np.int8)
         self.players_board = np.zeros((NUM_PLAYERS * 6, len(PIECES)), dtype=np.int8)
         self.scoring_board = np.zeros((NUM_PLAYERS * 5, 5), dtype=np.int8)
         self.current_player = 0
@@ -69,13 +68,14 @@ class AzulEnv(gym.Env):
             draft_pool, color, count, go_first, ladder_lvl = action
             self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, draft_pool, color, go_first, ladder_lvl)
             self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
+            self.current_player = (self.current_player + 1) % NUM_PLAYERS
 
-            if not self.game_logic.no_tiles_remaining(self.draft_board):  
+            if self.game_logic.is_turn_over(self.draft_board):  
                 self.turn += 1
                 self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
                 reward += self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
-                if self.game_logic.is_game_over(self.scoring_board):
-                    reward += self.game_logic.end_game_conditions(self.scoring_board, self.points_total)
+                if self.game_logic.no_tiles_to_draft(self.scoring_board):
+                    reward += self.game_logic.end_game_scoring(self.scoring_board, self.points_total)
                     terminated = True
                 else:
                     self.game_logic.update_first_player(self.players_board, self.current_player)
