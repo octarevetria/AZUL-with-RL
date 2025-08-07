@@ -29,6 +29,26 @@ class GameLogic:
         Initialize the GameLogic class.
         """
         pass
+    
+    def draft_piece(self, draft_board, draft_pool, color, count, go_first_available):
+        """
+        Draw tiles from the draft board and the update it.
+
+        Parameters:
+        draft_board (np.ndarray): The current draft board state.
+        draft_pool (int): The pool from which the piece is drafted.
+        color (int): The color of the tiles to be drafted.
+        count (int): The number of tiles to be drafted.
+        go_first_available (bool): Whether the go first tile is still available.
+        """
+        center_draft_pool = DRAFT_BOARD_ROWS - 1
+        draft_board[draft_pool, color] = 0
+        if draft_pool == center_draft_pool:
+            if go_first_available: 
+                draft_board[draft_pool, 5] = 0
+        else:
+            draft_board[center_draft_pool] = draft_board[center_draft_pool] + draft_board[draft_pool]
+            draft_board[draft_pool, : ] = 0
 
     def place_piece(self): # Necesita ser implementada
         """

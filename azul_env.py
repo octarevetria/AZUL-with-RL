@@ -10,7 +10,7 @@ class AzulEnv(gym.Env):
             gym.spaces.Discrete(6),  # De que lugar draftea (factories o pozo)
             gym.spaces.Discrete(5),  # Selección de color de piezas
             gym.spaces.Discrete(16),  # Cantidad de fichas robadas
-            gym.spaces.Discrete(2),  # Selecciona ficha de ir primero
+            gym.spaces.Discrete(2),  # Ficha de ir primero disponible
             gym.spaces.Discrete(6)  # En que nivel las coloca
         ))
 
@@ -65,9 +65,9 @@ class AzulEnv(gym.Env):
             raise ValueError("Invalid action")
             truncated = True
         else:
-            draft_pool, color, count, go_first, ladder_lvl = action
-            self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, draft_pool, color, go_first, ladder_lvl)
-            self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
+            draft_pool, color, count, go_first_available, ladder_lvl = action
+            self.game_logic.draft_piece(self.draft_board, draft_pool, color, count, go_first_available)
+            self.game_logic.place_piece(self.players_board, self.current_player, color, go_first_available, ladder_lvl, count)
             self.current_player = (self.current_player + 1) % NUM_PLAYERS
 
             if self.game_logic.is_turn_over(self.draft_board):  
