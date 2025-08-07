@@ -59,32 +59,30 @@ class AzulEnv(gym.Env):
         - done (bool): Whether the episode has ended.
         - info (dict): Additional info.
         """
+        reward = 0
         terminated, truncated = False, False
-        if not self.game_logic.no_tiles_remaining(self.draft_board):  
-            all_valid_actions = self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.current_player, self.scoring_board)
-            if action not in all_valid_actions:
-                raise ValueError("Invalid action")
-                truncated = True
-            else:
-                factory, color, count, go_first, ladder_lvl = action
-                self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, factory, color, go_first, ladder_lvl)
-                self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
+        all_valid_actions = self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.current_player, self.scoring_board)
+        if action not in all_valid_actions:
+            raise ValueError("Invalid action")
+            truncated = True
         else:
-            self.turn += 1
-            self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
-            if self.game_logic.is_game_over(self.scoring_board):
-                terminated = True
-                reward = self.game_logic.calculate_rewards(self.scoring_board, self.points_total) #duda, de como distribuir las recompensas
-            else:
-                self.game_logic.update_first_player(self.players_board, self.current_player)
-                self.game_logic.player_tiles_clear(self.players_board)
-                self.game_logic.reset_draft_board(self.draft_board)
-                reward = self.game_logic.calculate_rewards(self.scoring_board, self.points_total) #Calcular esto bien, no me queda claro
-                done = False
+            draft_pool, color, count, go_first, ladder_lvl = action
+            self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, draft_pool, color, go_first, ladder_lvl)
+            self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
+
+            if not self.game_logic.no_tiles_remaining(self.draft_board):  
+                self.turn += 1
+                self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
+                reward += self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
+                if self.game_logic.is_game_over(self.scoring_board):
+                    reward += self.game_logic.end_game_conditions(self.scoring_board, self.points_total)
+                    terminated = True
+                else:
+                    self.game_logic.update_first_player(self.players_board, self.current_player)
+                    self.game_logic.player_tiles_clear(self.players_board)
+                    self.game_logic.reset_draft_board(self.draft_board)
 
         observation = self.get_observation()
-
-
         return observation, reward, terminated, truncated, {}
 
     def render(self, mode='human'):
