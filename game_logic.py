@@ -1,16 +1,14 @@
 import numpy as np
-from constants import NUM_PLAYERS, PIECES, SCOREBOARD_MASK, PLAYERS_BOARD_ROWS, PLAYERS_BOARD_COLS, DRAFT_BOARD_ROWS, DRAFT_BOARD_COLS, INDIVIDUAL_PLAYER_BOARD_HEIGHT
+from constants import NUM_PLAYERS, PIECES, SCOREBOARD_MASK, PLAYERS_BOARD_ROWS, PLAYERS_BOARD_COLS, DRAFT_BOARD_ROWS, DRAFT_BOARD_COLS, INDIVIDUAL_PLAYER_BOARD_HEIGHT, COLOR_TO_COLUMN
 
 '''
 funciones necesarias para el enviroment
 self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.current_player, self.scoring_board)
-self.game_logic.draft_piece(self.draft_board, self.players_board, self.current_player, draft_pool, color, go_first, ladder_lvl)
 self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
 self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
 self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
-self.game_logic.is_game_over(self.scoring_board)
 self.game_logic.end_game_scoring(self.scoring_board, self.points_total)
-self.game_logic.player_tiles_clear(self.players_board)
+
 self.game_logic.reset_draft_board(self.draft_board)
 '''
 
@@ -18,7 +16,9 @@ self.game_logic.reset_draft_board(self.draft_board)
 
 # self.game_logic.no_tiles_to_draft(self.draft_board)
 # self.game_logic.update_first_player(self.players_board, self.current_player)
-
+# self.game_logic.draft_piece(self, draft_board, draft_pool, color, count, go_first_available)
+# self.game_logic.is_game_over(self, scoring_board)
+# self.game_logic.player_tiles_clear(self, players_board)
 
 class GameLogic:
     """
@@ -45,21 +45,10 @@ class GameLogic:
         draft_board[draft_pool, color] = 0
         if draft_pool == center_draft_pool:
             if go_first_available: 
-                draft_board[draft_pool, 5] = 0
+                draft_board[draft_pool, COLOR_TO_COLUMN["first_player"]] = 0
         else:
             draft_board[center_draft_pool] = draft_board[center_draft_pool] + draft_board[draft_pool]
             draft_board[draft_pool, : ] = 0
-
-    def place_piece(self): # Necesita ser implementada
-        """
-        Place a piece on the board if the move is valid.
-
-        Parameters:
-
-        Returns:
-        - bool: True if the piece is placed successfully, False otherwise.
-        """
-        pass
 
     def no_tiles_to_draft(self, draft_board):
         """
@@ -79,10 +68,36 @@ class GameLogic:
         """
         for i in range(PLAYERS_BOARD_ROWS):
             if i % INDIVIDUAL_PLAYER_BOARD_HEIGHT == 5:
-                for j in range(PLAYERS_BOARD_COLS):
-                    if players_board[i, j] == 1: 
-                        current_player = i // INDIVIDUAL_PLAYER_BOARD_HEIGHT
-        return current_player
+                if  players_board[i, COLOR_TO_COLUMN["first_player"]] == 1: 
+                    current_player = i // INDIVIDUAL_PLAYER_BOARD_HEIGHT
+        return current_player # Podria no ser necesario devolverlo
+
+    def is_game_over(self, scoring_board):
+        """
+        Check if theres a vertical line completed.
+
+        Parameters:
+        scoring_board (np.ndarray): The current socring_board state.
+
+        Returns:
+        - bool: True if the game is over, False otherwise.
+        """
+        scoring_board_rows = NUM_PLAYERS * 5
+        for i in range(scoring_board_rows):
+            if scoring_board[i].sum() == 15:
+                return True
+        return False
+
+    def player_tiles_clear(self, players_board):
+        """ 
+        Clear the tiles of the completed floors of all player's board.
+
+        Parameters:
+        players_board (np.ndarray): The current players board state.
+        """
+        for i in range(PLAYERS_BOARD_ROWS):
+            if i % INDIVIDUAL_PLAYER_BOARD_HEIGHT == 5 or players_board[i].sum() == (i % INDIVIDUAL_PLAYER_BOARD_HEIGHT) + 1:
+                players_board[i, :] = 0
 
     def is_valid_move(self): #Chequear si esta disponible el color donde se quiere colocar
         """
@@ -105,17 +120,5 @@ class GameLogic:
 
         Returns:
         - list: List of valid actions.
-        """
-        pass
-
-    def is_game_over(self, scoring_board): # Facil pero necesaria implementacion
-        """
-        Check if theres a vertical line completed.
-
-        Parameters:
-        scoring_board (np.ndarray): The current socring_board state.
-
-        Returns:
-        - bool: True if the game is over, False otherwise.
         """
         pass

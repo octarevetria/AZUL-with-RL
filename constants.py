@@ -6,3 +6,4 @@ PLAYERS_BOARD_COLS = len(PIECES)
 INDIVIDUAL_PLAYER_BOARD_HEIGHT = 6
 DRAFT_BOARD_ROWS = NUM_PLAYERS * 2 + 2
 DRAFT_BOARD_COLS = len(PIECES)
+COLOR_TO_COLUMN = {'yellow': 0, 'red': 1, 'skyblue': 2, 'blue': 3, 'black': 4, 'first_player': 5} 
