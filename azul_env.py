@@ -19,7 +19,7 @@ class AzulEnv(gym.Env):
             'players_board': gym.spaces.Box(low=0, high=7, shape=(NUM_PLAYERS * 6, len(PIECES)), dtype=np.int8),  # Información del jugador
             'scoring_board': gym.spaces.Box(low=0, high=5, shape=(NUM_PLAYERS * 5, 5), dtype=np.int8),  # Información del puntaje
             'current_player': gym.spaces.Discrete(NUM_PLAYERS),  # Jugador actual
-            'points_total': gym.spaces.Box(low=0, high=140, shape=(NUM_PLAYERS,), dtype=np.int8),  # Puntuación total de cada jugador
+            'points_total': gym.spaces.Box(low=0, high=141, shape=(NUM_PLAYERS,)),  # Puntuación total de cada jugador del 0 al 140
             'turn': gym.spaces.Discrete(10),  # Turno actual
         })
 
@@ -40,6 +40,7 @@ class AzulEnv(gym.Env):
         self.draft_board = np.zeros((NUM_PLAYERS * 2 + 2, len(PIECES)), dtype=np.int8)
         self.players_board = np.zeros((NUM_PLAYERS * 6, len(PIECES)), dtype=np.int8)
         self.scoring_board = np.zeros((NUM_PLAYERS * 5, 5), dtype=np.int8)
+        self.points_total = np.zeros(NUM_PLAYERS, dtype=np.int8)
         self.current_player = 0
         self.turn = 1
 
@@ -72,10 +73,10 @@ class AzulEnv(gym.Env):
 
             if self.game_logic.is_turn_over(self.draft_board):  
                 self.turn += 1
-                self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
+                self.game_logic.score_tiles(self.players_board, self.scoring_board, self.current_player, self.points_total)
                 reward += self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
                 if self.game_logic.no_tiles_to_draft(self.scoring_board):
-                    reward += self.game_logic.end_game_scoring(self.scoring_board, self.points_total)
+                    reward += self.game_logic.end_game_scoring(self.scoring_board, self.current_player, self.points_total)
                     terminated = True
                 else:
                     self.game_logic.update_first_player(self.players_board, self.current_player)

@@ -1,5 +1,5 @@
 import numpy as np
-from constants import NUM_PLAYERS, PIECES, SCOREBOARD_MASK, PLAYERS_BOARD_ROWS, PLAYERS_BOARD_COLS, DRAFT_BOARD_ROWS, DRAFT_BOARD_COLS, INDIVIDUAL_PLAYER_BOARD_HEIGHT, COLOR_TO_COLUMN
+from constants import NUM_PLAYERS, PIECES, SCOREBOARD_MASK, INDIVIDUAL_PLAYER_BOARD_HEIGHT, COLOR_TO_COLUMN
 
 '''
 funciones necesarias para el enviroment
@@ -7,9 +7,8 @@ self.game_logic.get_valid_actions(self.draft_board, self.players_board, self.cur
 self.game_logic.place_piece(self.players_board, self.current_player, color, go_first, ladder_lvl, count)
 self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
 self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
-self.game_logic.end_game_scoring(self.scoring_board, self.points_total)
-
 self.game_logic.reset_draft_board(self.draft_board)
+self.end_game_scoring(self.scoring_board, self.points_total)
 '''
 
 ### Done functions
@@ -41,7 +40,7 @@ class GameLogic:
         count (int): The number of tiles to be drafted.
         go_first_available (bool): Whether the go first tile is still available.
         """
-        center_draft_pool = DRAFT_BOARD_ROWS - 1
+        center_draft_pool = draft_board.shape[0] - 1
         draft_board[draft_pool, color] = 0
         if draft_pool == center_draft_pool:
             if go_first_available: 
@@ -66,7 +65,7 @@ class GameLogic:
         """
         Update the first player for the next turn.
         """
-        for i in range(PLAYERS_BOARD_ROWS):
+        for i in range(players_board.shape[0]):
             if i % INDIVIDUAL_PLAYER_BOARD_HEIGHT == 5:
                 if  players_board[i, COLOR_TO_COLUMN["first_player"]] == 1: 
                     current_player = i // INDIVIDUAL_PLAYER_BOARD_HEIGHT
@@ -82,8 +81,7 @@ class GameLogic:
         Returns:
         - bool: True if the game is over, False otherwise.
         """
-        scoring_board_rows = NUM_PLAYERS * 5
-        for i in range(scoring_board_rows):
+        for i in range(scoring_board.shape[0]):
             if scoring_board[i].sum() == 15:
                 return True
         return False
@@ -95,9 +93,20 @@ class GameLogic:
         Parameters:
         players_board (np.ndarray): The current players board state.
         """
-        for i in range(PLAYERS_BOARD_ROWS):
+        for i in range(players_board.shape[0]):
             if i % INDIVIDUAL_PLAYER_BOARD_HEIGHT == 5 or players_board[i].sum() == (i % INDIVIDUAL_PLAYER_BOARD_HEIGHT) + 1:
                 players_board[i, :] = 0
+
+    def end_game_scoring(self, scoring_board, current_player, points_total):
+        """
+        Calculate end game scoring.
+
+        Parameters:
+        scoring_board (np.ndarray): The current scoring board state.
+        points_total (np.ndarray): The current total points of each player.
+        """
+        #for i in range(scoring_board.shape[0]):
+        pass
 
     def is_valid_move(self): #Chequear si esta disponible el color donde se quiere colocar
         """
