@@ -97,15 +97,14 @@ class GameLogic:
             if i % INDIVIDUAL_PLAYER_BOARD_HEIGHT == 5 or players_board[i].sum() == (i % INDIVIDUAL_PLAYER_BOARD_HEIGHT) + 1:
                 players_board[i, :] = 0
 
-    def end_game_scoring(self, scoring_board, current_player, points_total):
+    def calculate_rewards(self, players_board, scoring_board, current_player, points_total, color, go_first_available, ladder_lvl, spill_tiles_count):
         """
-        Calculate end game scoring.
-
-        Parameters:
-        scoring_board (np.ndarray): The current scoring board state.
-        points_total (np.ndarray): The current total points of each player.
+        Calculate the rewards based on the current scoring board and players total points, rehacer.
         """
-        #for i in range(scoring_board.shape[0]):
+        reward = 0
+        last_row_edited = current_player * INDIVIDUAL_PLAYER_BOARD_HEIGHT + ladder_lvl
+        if players_board[last_row_edited, COLOR_TO_COLUMN[color]] == ladder_lvl + 1:
+            reward += 1 # Seguir desde aca
         pass
 
     def is_valid_move(self): #Chequear si esta disponible el color donde se quiere colocar

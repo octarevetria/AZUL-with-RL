@@ -68,15 +68,14 @@ class AzulEnv(gym.Env):
         else:
             draft_pool, color, count, go_first_available, ladder_lvl = action
             self.game_logic.draft_piece(self.draft_board, draft_pool, color, count, go_first_available)
-            self.game_logic.place_piece(self.players_board, self.current_player, color, go_first_available, ladder_lvl, count)
+            spill_tiles_count = self.game_logic.place_piece(self.players_board, self.scoring_board, self.current_player, color, go_first_available, ladder_lvl, count)
+            reward += self.game_logic.calculate_rewards(self.players_board, self.current_player, self.scoring_board, self.points_total, color, go_first_available, ladder_lvl, spill_tiles_count)
             self.current_player = (self.current_player + 1) % NUM_PLAYERS
 
-            if self.game_logic.is_turn_over(self.draft_board):  
+            if self.game_logic.no_tiles_to_draft(self.draft_board):  
                 self.turn += 1
-                self.game_logic.score_tiles(self.players_board, self.scoring_board, self.current_player, self.points_total)
-                reward += self.game_logic.calculate_rewards(self.scoring_board, self.points_total)
-                if self.game_logic.no_tiles_to_draft(self.scoring_board):
-                    reward += self.game_logic.end_game_scoring(self.scoring_board, self.current_player, self.points_total)
+                self.game_logic.score_tiles(self.players_board, self.scoring_board, self.points_total)
+                if self.game_logic.is_game_over(self.scoring_board):
                     terminated = True
                 else:
                     self.game_logic.update_first_player(self.players_board, self.current_player)
